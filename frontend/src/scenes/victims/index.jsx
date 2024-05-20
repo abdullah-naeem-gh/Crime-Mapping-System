@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, useTheme } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
+import { Box, Modal, Typography, IconButton, useTheme } from '@mui/material';
+import { DataGrid , GridToolbar } from '@mui/x-data-grid';
 import { tokens } from '../../theme';
 import Header from '../../components/Header';
 import axios from 'axios';
+import CloseIcon from '@mui/icons-material/Close';
 
 const Victims = () => {
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
     const [rows, setRows] = useState([]);
+    const [selectedVictimId, setSelectedVictimId] = useState(null);
+    const [crimes, setCrimes] = useState([]);
+    const [open, setOpen] = useState(false);
 
     useEffect(() => {
         axios.get('http://localhost:8081/api/victims')
@@ -21,6 +25,23 @@ const Victims = () => {
             });
     }, []);
 
+    const handleNameClick = (id) => {
+        setSelectedVictimId(id);
+        axios.get(`http://localhost:8081/api/crimesbyvictim/${id}`)
+            .then(response => {
+                setCrimes(response.data.map(crime => ({ ...crime, id: crime.CrimeID })));
+                setOpen(true);
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+        setCrimes([]);
+    };
+
     const columns = [
         { field: 'VictimID', headerName: 'ID' },
         {
@@ -28,30 +49,23 @@ const Victims = () => {
             headerName: 'Name',
             flex: 1,
             cellClassName: 'name-column--cell',
-        },
-        {
-            field: 'Phone',
-            headerName: 'Phone Number',
-            flex: 1,
-        },
-        {
-            field: 'Email',
-            headerName: 'Email',
-            flex: 1,
-        },
-        {
-            field: 'Cost',
-            headerName: 'Cost',
-            flex: 1,
             renderCell: (params) => (
-                <Typography color={colors.greenAccent[500]}>
-                    ${params.row.Cost}
-                </Typography>
+                <span
+                    style={{ cursor: 'pointer', color: colors.greenAccent[300] }}
+                    onClick={() => handleNameClick(params.id)}
+                >
+                    {params.value}
+                </span>
             ),
         },
         {
-            field: 'Date',
-            headerName: 'Date',
+            field: 'Age',
+            headerName: 'Age',
+            flex: 1,
+        },
+        {
+            field: 'Address',
+            headerName: 'Address',
             flex: 1,
         },
     ];
@@ -89,12 +103,43 @@ const Victims = () => {
                 }}
             >
                 <DataGrid
-                    checkboxSelection
                     rows={rows}
                     columns={columns}
                     getRowId={(row) => row.VictimID}
+                    components={{ Toolbar: GridToolbar }}
                 />
             </Box>
+
+            <Modal open={open} onClose={handleClose}>
+                <Box sx={{
+                    position: 'absolute',
+                    top: '10%',
+                    left: '10%',
+                    right: '10%',
+                    bgcolor: 'background.paper',
+                    p: 4,
+                    boxShadow: 24,
+                }}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h6">Crimes Involving Victim</Typography>
+                        <IconButton onClick={handleClose}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
+                    <DataGrid
+                        rows={crimes}
+                        columns={[
+                            { field: 'CrimeID', headerName: 'Crime ID', flex: 0.5 },
+                            { field: 'LocationID', headerName: 'Location ID', flex: 0.5 },
+                            { field: 'CrimeType', headerName: 'Crime Type', flex: 1 },
+                            { field: 'Description', headerName: 'Description', flex: 2 },
+                            { field: 'Date', headerName: 'Date', flex: 1 },
+                            { field: 'StationID', headerName: 'Station ID', flex: 0.5 },
+                        ]}
+                        autoHeight
+                    />
+                </Box>
+            </Modal>
         </Box>
     );
 };

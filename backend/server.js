@@ -78,6 +78,21 @@ app.get('/api/crimescommitted/:criminalId', (req, res) => {
     });
 });
 
+// Crimes involving a specific victim endpoint
+app.get('/api/crimesbyvictim/:victimId', (req, res) => {
+    const victimId = req.params.victimId;
+    const sql = `
+        SELECT c.CrimeID, c.LocationID, c.CrimeType, c.Description, c.Date, c.StationID 
+        FROM Crimes c
+        JOIN CrimeVictims cv ON c.CrimeID = cv.CrimeID
+        WHERE cv.VictimID = ?;
+    `;
+    db.query(sql, [victimId], (err, data) => {
+        if (err) return res.status(500).json({ message: "Error fetching crimes data", error: err });
+        return res.json(data);
+    });
+});
+
 
 app.listen(8081, () => {
     console.log("Server is running on port 8081");
