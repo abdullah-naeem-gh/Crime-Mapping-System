@@ -17,7 +17,7 @@ const Crimes = () => {
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
-        axios.get('http://localhost:8081/api/crimes')
+        axios.get('process.env.REACT_APP_BACKEND_URL/api/crimes')
             .then(response => {
                 const dataWithId = response.data.map(crime => ({ ...crime, id: crime.CrimeID }));
                 setRows(dataWithId);
@@ -29,7 +29,7 @@ const Crimes = () => {
 
     const handleCrimeClick = (id) => {
         setSelectedCrimeId(id);
-        axios.get(`http://localhost:8081/api/victimsforcrime/${id}`)
+        axios.get(`process.env.REACT_APP_BACKEND_URL/api/victimsforcrime/${id}`)
             .then(response => {
                 setVictims(response.data.map((victim, index) => ({
                     ...victim,
@@ -40,7 +40,7 @@ const Crimes = () => {
                 console.error('Error fetching victims data:', error);
             });
 
-        axios.get(`http://localhost:8081/api/criminalsforcrime/${id}`)
+        axios.get(`process.env.REACT_APP_BACKEND_URL/api/criminalsforcrime/${id}`)
             .then(response => {
                 setCriminals(response.data.map((criminal, index) => ({
                     ...criminal,

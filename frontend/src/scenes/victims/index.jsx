@@ -19,7 +19,7 @@ const Victims = () => {
     const [victimIdToRemove, setVictimIdToRemove] = useState('');
 
     useEffect(() => {
-        axios.get('http://localhost:8081/api/victims')
+        axios.get('process.env.REACT_APP_BACKEND_URL/api/victims')
             .then(response => {
                 const dataWithId = response.data.map(victim => ({ ...victim, id: victim.VictimID }));
                 setRows(dataWithId);
@@ -31,7 +31,7 @@ const Victims = () => {
 
     const handleNameClick = (id) => {
         setSelectedVictimId(id);
-        axios.get(`http://localhost:8081/api/crimesbyvictim/${id}`)
+        axios.get(`process.env.REACT_APP_BACKEND_URL/api/crimesbyvictim/${id}`)
             .then(response => {
                 setCrimes(response.data.map(crime => ({ ...crime, id: crime.CrimeID })));
                 setOpen(true);
@@ -65,7 +65,7 @@ const Victims = () => {
     };
 
     const handleAddVictim = () => {
-        axios.post('http://localhost:8081/api/victims', newVictim)
+        axios.post('process.env.REACT_APP_BACKEND_URL/api/victims', newVictim)
             .then(response => {
                 const newVictimWithId = { ...newVictim, id: response.data.VictimID };
                 setRows([...rows, newVictimWithId]);
@@ -77,7 +77,7 @@ const Victims = () => {
     };
 
     const handleRemoveVictim = () => {
-        axios.delete(`http://localhost:8081/api/victims/${victimIdToRemove}`)
+        axios.delete(`process.env.REACT_APP_BACKEND_URL/api/victims/${victimIdToRemove}`)
             .then(response => {
                 setRows(rows.filter(row => row.id !== parseInt(victimIdToRemove)));
                 handleRemoveClose();
