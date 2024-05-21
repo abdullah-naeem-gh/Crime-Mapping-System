@@ -15,7 +15,9 @@ const Criminals = () => {
     const [crimes, setCrimes] = useState([]);
     const [open, setOpen] = useState(false);
     const [addOpen, setAddOpen] = useState(false);
+    const [removeOpen, setRemoveOpen] = useState(false);
     const [newCriminal, setNewCriminal] = useState({ Name: '', Age: '', Address: '' });
+    const [criminalIdToRemove, setCriminalIdToRemove] = useState('');
 
     useEffect(() => {
         axios.get('http://localhost:8081/api/criminals')
@@ -49,8 +51,17 @@ const Criminals = () => {
         setNewCriminal({ Name: '', Age: '', Address: '' });
     };
 
+    const handleRemoveClose = () => {
+        setRemoveOpen(false);
+        setCriminalIdToRemove('');
+    };
+
     const handleAddOpen = () => {
         setAddOpen(true);
+    };
+
+    const handleRemoveOpen = () => {
+        setRemoveOpen(true);
     };
 
     const handleAddCriminal = () => {
@@ -66,12 +77,11 @@ const Criminals = () => {
     };
 
     const handleRemoveCriminal = () => {
-        if (selectedCriminalIds.length === 0) return;
-
-        axios.delete(`http://localhost:8081/api/criminals/${selectedCriminalIds[0]}`)
+        axios.delete(`http://localhost:8081/api/criminals/${criminalIdToRemove}`)
             .then(response => {
-                setRows(rows.filter(row => !selectedCriminalIds.includes(row.id)));
+                setRows(rows.filter(row => row.id !== parseInt(criminalIdToRemove, 10)));
                 setSelectedCriminalIds([]);
+                handleRemoveClose();
             })
             .catch(error => {
                 console.error('Error removing criminal:', error);
@@ -121,8 +131,7 @@ const Criminals = () => {
                 <Button
                     variant="contained"
                     color="error"
-                    onClick={handleRemoveCriminal}
-                    disabled={selectedCriminalIds.length === 0}
+                    onClick={handleRemoveOpen}
                 >
                     Remove Criminal
                 </Button>
@@ -237,12 +246,44 @@ const Criminals = () => {
                         />
                         <Button
                             variant="contained"
+                            color="primary"
+                            onClick={handleAddCriminal}
+                        >
+                            Add Criminal
+                        </Button>
+                    </Box>
+                </Box>
+            </Modal>
+
+            <Modal open={removeOpen} onClose={handleRemoveClose}>
+                <Box sx={{
+                    position: 'absolute',
+                    top: '10%',
+                    left: '10%',
+                    right: '10%',
+                    bgcolor: 'background.paper',
+                    p: 4,
+                    boxShadow: 24,
+                }}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h6">Remove Criminal</Typography>
+                        <IconButton onClick={handleRemoveClose}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
+                    <Box component="form" display="flex" flexDirection="column" gap="20px" mt="20px">
+                        <TextField
+                            label="Criminal ID"
+                            value={criminalIdToRemove}
+                            onChange={(e) => setCriminalIdToRemove(e.target.value)}
+                        />
+                        <Button
+                            variant="contained"
                             color="error"
                             onClick={handleRemoveCriminal}
-                            disabled={selectedCriminalIds.length === 0}
-                            >
+                        >
                             Remove Criminal
-                            </Button>
+                        </Button>
                     </Box>
                 </Box>
             </Modal>

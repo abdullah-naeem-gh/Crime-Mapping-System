@@ -139,6 +139,21 @@ app.post('/api/victims', (req, res) => {
     });
 });
 
+// Delete victim endpoint
+app.delete('/api/victims/:id', (req, res) => {
+    const { id } = req.params;
+    const sql = 'DELETE FROM Victims WHERE VictimID = ?';
+    db.query(sql, [id], (err, result) => {
+        if (err) {
+            return res.status(500).json({ message: "Error deleting victim", error: err });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Victim not found" });
+        }
+        return res.status(200).json({ message: "Victim deleted successfully" });
+    });
+});
+
 
 // Crimes committed by a specific criminal endpoint
 app.get('/api/crimescommitted/:criminalId', (req, res) => {

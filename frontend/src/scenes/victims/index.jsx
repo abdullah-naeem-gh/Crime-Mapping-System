@@ -14,7 +14,9 @@ const Victims = () => {
     const [crimes, setCrimes] = useState([]);
     const [open, setOpen] = useState(false);
     const [addOpen, setAddOpen] = useState(false);
+    const [removeOpen, setRemoveOpen] = useState(false);
     const [newVictim, setNewVictim] = useState({ Name: '', Age: '', Address: '' });
+    const [victimIdToRemove, setVictimIdToRemove] = useState('');
 
     useEffect(() => {
         axios.get('http://localhost:8081/api/victims')
@@ -49,8 +51,17 @@ const Victims = () => {
         setNewVictim({ Name: '', Age: '', Address: '' });
     };
 
+    const handleRemoveClose = () => {
+        setRemoveOpen(false);
+        setVictimIdToRemove('');
+    };
+
     const handleAddOpen = () => {
         setAddOpen(true);
+    };
+
+    const handleRemoveOpen = () => {
+        setRemoveOpen(true);
     };
 
     const handleAddVictim = () => {
@@ -62,6 +73,17 @@ const Victims = () => {
             })
             .catch(error => {
                 console.error('Error adding victim:', error);
+            });
+    };
+
+    const handleRemoveVictim = () => {
+        axios.delete(`http://localhost:8081/api/victims/${victimIdToRemove}`)
+            .then(response => {
+                setRows(rows.filter(row => row.id !== parseInt(victimIdToRemove)));
+                handleRemoveClose();
+            })
+            .catch(error => {
+                console.error('Error removing victim:', error);
             });
     };
 
@@ -96,9 +118,14 @@ const Victims = () => {
     return (
         <Box m="20px" mt={0}>
             <Header title="VICTIMS" subtitle="List of Victims" />
-            <Button variant="contained" color="secondary" onClick={handleAddOpen}>
-                Add Victim
-            </Button>
+            <Box display="flex" gap="10px" mb="10px">
+                <Button variant="contained" color="secondary" onClick={handleAddOpen}>
+                    Add Victim
+                </Button>
+                <Button variant="contained" color="error" onClick={handleRemoveOpen}>
+                    Remove Victim
+                </Button>
+            </Box>
             <Box
                 m="10px 0 0 0"
                 height="75vh"
@@ -202,6 +229,35 @@ const Victims = () => {
                         />
                         <Button variant="contained" color="primary" onClick={handleAddVictim}>
                             Add Victim
+                        </Button>
+                    </Box>
+                </Box>
+            </Modal>
+
+            <Modal open={removeOpen} onClose={handleRemoveClose}>
+                <Box sx={{
+                    position: 'absolute',
+                    top: '10%',
+                    left: '10%',
+                    right: '10%',
+                    bgcolor: 'background.paper',
+                    p: 4,
+                    boxShadow: 24,
+                }}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h6">Remove Victim</Typography>
+                        <IconButton onClick={handleRemoveClose}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
+                    <Box component="form" display="flex" flexDirection="column" gap="20px" mt="20px">
+                        <TextField
+                            label="Victim ID"
+                            value={victimIdToRemove}
+                            onChange={(e) => setVictimIdToRemove(e.target.value)}
+                        />
+                        <Button variant="contained" color="error" onClick={handleRemoveVictim}>
+                            Remove Victim
                         </Button>
                     </Box>
                 </Box>
