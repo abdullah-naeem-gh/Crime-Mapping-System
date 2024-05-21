@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Modal, Typography, IconButton } from '@mui/material';
+import { Box, Modal, Typography, IconButton, Button, TextField } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { tokens } from '../../theme';
 import Header from '../../components/Header';
@@ -11,9 +11,11 @@ const Criminals = () => {
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
     const [rows, setRows] = useState([]);
-    const [selectedCriminalId, setSelectedCriminalId] = useState(null);
+    const [selectedCriminalIds, setSelectedCriminalIds] = useState([]);
     const [crimes, setCrimes] = useState([]);
     const [open, setOpen] = useState(false);
+    const [addOpen, setAddOpen] = useState(false);
+    const [newCriminal, setNewCriminal] = useState({ Name: '', Age: '', Address: '' });
 
     useEffect(() => {
         axios.get('http://localhost:8081/api/criminals')
@@ -27,7 +29,6 @@ const Criminals = () => {
     }, []);
 
     const handleNameClick = (id) => {
-        setSelectedCriminalId(id);
         axios.get(`http://localhost:8081/api/crimescommitted/${id}`)
             .then(response => {
                 setCrimes(response.data.map(crime => ({ ...crime, id: crime.CrimeID })));
@@ -41,6 +42,40 @@ const Criminals = () => {
     const handleClose = () => {
         setOpen(false);
         setCrimes([]);
+    };
+
+    const handleAddClose = () => {
+        setAddOpen(false);
+        setNewCriminal({ Name: '', Age: '', Address: '' });
+    };
+
+    const handleAddOpen = () => {
+        setAddOpen(true);
+    };
+
+    const handleAddCriminal = () => {
+        axios.post('http://localhost:8081/api/criminals', newCriminal)
+            .then(response => {
+                const newCriminalWithId = { ...newCriminal, id: response.data.criminalId };
+                setRows([...rows, newCriminalWithId]);
+                handleAddClose();
+            })
+            .catch(error => {
+                console.error('Error adding criminal:', error);
+            });
+    };
+
+    const handleRemoveCriminal = () => {
+        if (selectedCriminalIds.length === 0) return;
+
+        axios.delete(`http://localhost:8081/api/criminals/${selectedCriminalIds[0]}`)
+            .then(response => {
+                setRows(rows.filter(row => !selectedCriminalIds.includes(row.id)));
+                setSelectedCriminalIds([]);
+            })
+            .catch(error => {
+                console.error('Error removing criminal:', error);
+            });
     };
 
     const columns = [
@@ -71,17 +106,29 @@ const Criminals = () => {
             headerName: 'Address',
             flex: 1,
         },
-
     ];
 
     return (
-        <Box m="20px">
+        <Box m="20px" mt={0}>
             <Header
                 title="CRIMINALS"
                 subtitle="List of Criminals for Reference"
             />
+            <Box display="flex" gap="10px" mb="10px">
+                <Button variant="contained" color="secondary" onClick={handleAddOpen}>
+                    Add Criminal
+                </Button>
+                <Button
+                    variant="contained"
+                    color="error"
+                    onClick={handleRemoveCriminal}
+                    disabled={selectedCriminalIds.length === 0}
+                >
+                    Remove Criminal
+                </Button>
+            </Box>
             <Box
-                m="40px 0 0 0"
+                m="10px 0 0 0"
                 height="75vh"
                 sx={{
                     '& .MuiDataGrid-root': {
@@ -116,6 +163,11 @@ const Criminals = () => {
                     rows={rows}
                     columns={columns}
                     components={{ Toolbar: GridToolbar }}
+                    checkboxSelection
+                    onSelectionModelChange={(newSelection) => {
+                        console.log('Selection changed:', newSelection); // Log the new selection
+                        setSelectedCriminalIds(newSelection);
+                    }}
                 />
             </Box>
 
@@ -147,6 +199,51 @@ const Criminals = () => {
                         ]}
                         autoHeight
                     />
+                </Box>
+            </Modal>
+
+            <Modal open={addOpen} onClose={handleAddClose}>
+                <Box sx={{
+                    position: 'absolute',
+                    top: '10%',
+                    left: '10%',
+                    right: '10%',
+                    bgcolor: 'background.paper',
+                    p: 4,
+                    boxShadow: 24,
+                }}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h6">Add New Criminal</Typography>
+                        <IconButton onClick={handleAddClose}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
+                    <Box component="form" display="flex" flexDirection="column" gap="20px" mt="20px">
+                        <TextField
+                            label="Name"
+                            value={newCriminal.Name}
+                            onChange={(e) => setNewCriminal({ ...newCriminal, Name: e.target.value })}
+                        />
+                        <TextField
+                            label="Age"
+                            type="number"
+                            value={newCriminal.Age}
+                            onChange={(e) => setNewCriminal({ ...newCriminal, Age: e.target.value })}
+                        />
+                        <TextField
+                            label="Address"
+                            value={newCriminal.Address}
+                            onChange={(e) => setNewCriminal({ ...newCriminal, Address: e.target.value })}
+                        />
+                        <Button
+                            variant="contained"
+                            color="error"
+                            onClick={handleRemoveCriminal}
+                            disabled={selectedCriminalIds.length === 0}
+                            >
+                            Remove Criminal
+                            </Button>
+                    </Box>
                 </Box>
             </Modal>
         </Box>

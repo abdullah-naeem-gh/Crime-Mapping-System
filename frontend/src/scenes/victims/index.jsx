@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Modal, Typography, IconButton, useTheme } from '@mui/material';
-import { DataGrid , GridToolbar } from '@mui/x-data-grid';
+import { Box, Modal, Typography, IconButton, Button, TextField, useTheme } from '@mui/material';
+import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { tokens } from '../../theme';
 import Header from '../../components/Header';
 import axios from 'axios';
@@ -13,6 +13,8 @@ const Victims = () => {
     const [selectedVictimId, setSelectedVictimId] = useState(null);
     const [crimes, setCrimes] = useState([]);
     const [open, setOpen] = useState(false);
+    const [addOpen, setAddOpen] = useState(false);
+    const [newVictim, setNewVictim] = useState({ Name: '', Age: '', Address: '' });
 
     useEffect(() => {
         axios.get('http://localhost:8081/api/victims')
@@ -40,6 +42,27 @@ const Victims = () => {
     const handleClose = () => {
         setOpen(false);
         setCrimes([]);
+    };
+
+    const handleAddClose = () => {
+        setAddOpen(false);
+        setNewVictim({ Name: '', Age: '', Address: '' });
+    };
+
+    const handleAddOpen = () => {
+        setAddOpen(true);
+    };
+
+    const handleAddVictim = () => {
+        axios.post('http://localhost:8081/api/victims', newVictim)
+            .then(response => {
+                const newVictimWithId = { ...newVictim, id: response.data.VictimID };
+                setRows([...rows, newVictimWithId]);
+                handleAddClose();
+            })
+            .catch(error => {
+                console.error('Error adding victim:', error);
+            });
     };
 
     const columns = [
@@ -71,10 +94,13 @@ const Victims = () => {
     ];
 
     return (
-        <Box m="20px">
+        <Box m="20px" mt={0}>
             <Header title="VICTIMS" subtitle="List of Victims" />
+            <Button variant="contained" color="secondary" onClick={handleAddOpen}>
+                Add Victim
+            </Button>
             <Box
-                m="40px 0 0 0"
+                m="10px 0 0 0"
                 height="75vh"
                 sx={{
                     '& .MuiDataGrid-root': {
@@ -105,7 +131,7 @@ const Victims = () => {
                 <DataGrid
                     rows={rows}
                     columns={columns}
-                    getRowId={(row) => row.VictimID}
+                    getRowId={(row) => row.id}
                     components={{ Toolbar: GridToolbar }}
                 />
             </Box>
@@ -138,6 +164,46 @@ const Victims = () => {
                         ]}
                         autoHeight
                     />
+                </Box>
+            </Modal>
+
+            <Modal open={addOpen} onClose={handleAddClose}>
+                <Box sx={{
+                    position: 'absolute',
+                    top: '10%',
+                    left: '10%',
+                    right: '10%',
+                    bgcolor: 'background.paper',
+                    p: 4,
+                    boxShadow: 24,
+                }}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h6">Add New Victim</Typography>
+                        <IconButton onClick={handleAddClose}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
+                    <Box component="form" display="flex" flexDirection="column" gap="20px" mt="20px">
+                        <TextField
+                            label="Name"
+                            value={newVictim.Name}
+                            onChange={(e) => setNewVictim({ ...newVictim, Name: e.target.value })}
+                        />
+                        <TextField
+                            label="Age"
+                            type="number"
+                            value={newVictim.Age}
+                            onChange={(e) => setNewVictim({ ...newVictim, Age: e.target.value })}
+                        />
+                        <TextField
+                            label="Address"
+                            value={newVictim.Address}
+                            onChange={(e) => setNewVictim({ ...newVictim, Address: e.target.value })}
+                        />
+                        <Button variant="contained" color="primary" onClick={handleAddVictim}>
+                            Add Victim
+                        </Button>
+                    </Box>
                 </Box>
             </Modal>
         </Box>

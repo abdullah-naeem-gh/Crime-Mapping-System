@@ -21,7 +21,7 @@ const Topbar = () => {
     <Box display="flex" justifyContent="space-between" p={0} pt={2}>
       <Box></Box>
             {/* ICONS */}
-      <Box display="flex"  >
+      <Box display="flex" pr={4} >
         <IconButton onClick={colorMode.toggleColorMode}>
           {theme.palette.mode === "dark" ? (
             <DarkModeOutlinedIcon />
